@@ -2,6 +2,9 @@
     ----- NOTE -----
     1.  If 'solutionsStorageAccountConnectionString' is empty or null, the script will attempt solution deployments living in the PROD SDS instance
     2.  If 'solutionsStorageAccountConnectionString' is NOT null or empty, the script will attempt solution deployments living in the specified SANDBOX SDS instance (i.e. Custom Solutions)
+            *** The relevant storage account connection string can be found by looking in the subscription where solution authoring was turned on.
+                SDS creates resource groups with a prefix of 'saw'. If there are multiple solution authors in the subscription, each resource group
+                is also tagged with the 'UserEmailTag' of the author who it belongs to. The connection string is in the Storage Account -> Access Keys
     3.  'solutionType' refers to the solution type id like 'remote-monitoring', THIS SHOULD BE LOWERCASE, even if the pushed solution had uppercase chars
     4.  If 'solutionVariant' is not applicable, or you want to deploy the default, leave blank. Otherwise, it expects the variant diff from the Manifest file name:
             i.e. If you have two variants, ('Manifest.xml' and 'ManifestJava.xml'), set 'solutionVariant' to '' for default and 'Java' for the variant. CASE SENSITIVE
