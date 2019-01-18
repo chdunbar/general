@@ -21,9 +21,9 @@
 # This param list is for specifying the values AND THEN running the script
 param (
     [string]$solutionsStorageAccountConnectionString = "arbConnectionString",
-    [string]$solutionType = "arb-solutionType",
+    [string]$solutionType = "arbsolutiontype", # Must be lowercase
     [string]$solutionVariant = "",
-    [string]$solutionName = "arb-solutionName",
+    [string]$solutionName = "arbSolutionName",
     [string]$deploymentSubscriptionId = "arbGuid",
     [string]$deploymentTenantId = "arbGuid",
     [string]$location = "East US",
@@ -57,10 +57,12 @@ param (
 )
 #>
 
+# The SDS API that supports deployments through request
 $deploymentEndpoint = "https://sds-api.azureiotsolutions.com/"
 
 $ErrorActionPreference = 'Stop'
 
+# function for getting Authorization tokens
 function GetAuthToken
 {
        param
@@ -93,6 +95,7 @@ function GetAuthToken
        return $authResult
 }
 
+# function for monitoring and printing the status of a deployment
 function MonitorAndPrintDeployment {
     param
     (
@@ -136,18 +139,21 @@ function MonitorAndPrintDeployment {
     return $deploymentDetails
 }
 
+# Getting authorization tokens for deployment
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true} ;
 $token = GetAuthToken $deploymentTenantId "https://management.core.windows.net/"
 $managementToken = $token.AccessToken
 $token = GetAuthToken $deploymentTenantId "https://graph.windows.net/"
 $graphToken = $token.AccessToken
 
+# Creating headers for request
 $header = @{
     'Content-Type'  = 'application\json'
     'Authorization' = "Bearer $managementToken"
     'MS-GraphToken' = "$graphToken"
 }
 
+# Creating body for request
 $payload = @{
     Location = $location
     Name = $solutionName
@@ -157,21 +163,27 @@ $payload = @{
 
 $solutionTemplate = $solutionType
 
+# if 'solutionsStorageAccountConnectionString', it's a non-PROD solution
+# non-PROD solutions need to append '@user' to the solutionType
 if ($solutionsStorageAccountConnectionString.length -gt 0) {
     $solutionTemplate = "$solutionType" + '@user'
     $payload.TemplateId = $solutionTemplate
 
+    # adding connection string for Storage Account that contains the solution to deploy
     $payload.SolutionStorageConnectionString = $solutionsStorageAccountConnectionString
 }
 
+# if solutionVariant is defined, add it to request body
 if ($solutionVariant.length -gt 0) {
     $payload.TemplateVariant = $solutionVariant
 }
 
+# deploy multiple or single and monitor
 if ($numberOfDeployments -gt 1) {
 
     $intInc = 0
 
+    # loop till 'numberOfDeployments' creating deployments
     do {
 
         $payload.Name = $solutionName + $intInc
@@ -194,6 +206,7 @@ if ($numberOfDeployments -gt 1) {
 
     Write-Host "Creating new SDS deployment of ${solutionType} into ${solutionName}..."
 
+    # save deployment start time
     $StartDateTime = (Get-Date)
 
     $body = $payload | ConvertTo-Json 
@@ -204,6 +217,7 @@ if ($numberOfDeployments -gt 1) {
 
     $uniqueId = $deployment.uniqueId
 
+    # loop until deployment has failed or succeeded
     do {
         $deploymentDetails = MonitorAndPrintDeployment -Subscription $deploymentSubscriptionId -UniqueId $uniqueId
         $status = $deploymentDetails.deployment.status
@@ -218,18 +232,21 @@ if ($numberOfDeployments -gt 1) {
     }
     while ($status -notlike 'failed' -and $status -notlike 'ready')
 
+    # save deployment end time
     $EndDateTime = (Get-Date)
 
     if ($status -notlike 'ready')
     {
         throw "Deployment failed."
     } else {
+        # only print elapsed time for successful deployments
         $ElapsedSpan = New-TimeSpan -Start $StartDateTime -End $EndDateTime
         $ElapsedTime = "{0:HH:mm:ss}" -f ([datetime]$ElapsedSpan.Ticks)
 
         Write-Host "Deployment Time: $ElapsedTime"
     }
 
+    # display the 'Done' step contents, the markdown file at the end
     Write-Host "Final output:"
     $deploymentDetails.provisioningSteps[-1].instructions.data
 }
