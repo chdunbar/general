@@ -1,6 +1,8 @@
 **sdsDeployer.ps1**
 
-The powershell script has comments that give more detail, but basically you provide some deployment parameters and then run it.
+Run it with '.\sdsDeployer.ps1' in Powershell. 
+
+The script has comments that give more detail, but basically you provide some deployment parameters and then run it. It should be fairly easy to modify as well.
 
 This should make the authoring/testing flow a little easier. We can deploy custom and prod solutions without needing to go to the **My Solutions** section in https://sds.azureiotsolutions.com/en-US/CustomSolutions. Also we can start a bunch of deployments at the same time (vs opening a bunch of tabs).
 
