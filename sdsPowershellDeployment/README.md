@@ -13,3 +13,5 @@ For multiple deployments it will just append a 0...n to the end of the solutionN
 Variants are supported in both.
 
 The script could still be improved though. Feel free to change it.
+
+**NOTE: The graph/management tokens this script uses are not issued by SDS, so they might have different authority than what you would get in a deployment through solutions.com or SDS itself. So any permission related testing should still be done through the web version of SDS. But this script is still good for testing most things.
